@@ -1,0 +1,127 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: isp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: isp_management
+      POSTGRES_USER: isp_user
+      POSTGRES_PASSWORD: isp_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - isp-network
+
+  # Redis for Queue & Cache
+  redis:
+    image: redis:7-alpine
+    container_name: isp-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - isp-network
+
+  # FreeRADIUS Server
+  freeradius:
+    image: freeradius/freeradius-server:latest
+    container_name: isp-radius
+    restart: unless-stopped
+    ports:
+      - "1812:1812/udp"  # Authentication
+      - "1813:1813/udp"  # Accounting
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=isp_management
+      - DB_USER=isp_user
+      - DB_PASSWORD=isp_password
+    depends_on:
+      - postgres
+    networks:
+      - isp-network
+    volumes:
+      - ./radius-config:/etc/raddb
+
+  # Laravel Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: isp-backend
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+      - ./backend/storage:/var/www/storage
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=isp_management
+      - DB_USERNAME=isp_user
+      - DB_PASSWORD=isp_password
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - isp-network
+
+  # Network Worker (Python)
+  network-worker:
+    build:
+      context: ./network-worker
+      dockerfile: Dockerfile
+    container_name: isp-network-worker
+    restart: unless-stopped
+    volumes:
+      - ./network-worker:/app
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=isp_management
+      - DB_USER=isp_user
+      - DB_PASSWORD=isp_password
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - isp-network
+
+  # Frontend Vue 3
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: isp-frontend
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000/api
+    networks:
+      - isp-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  isp-network:
+    driver: bridge

@@ -1,0 +1,43 @@
+# Laravel
+/vendor/
+/node_modules/
+/.env
+/.env.*
+/.idea/
+/.vscode/
+/storage/
+/public/storage
+/bootstrap/cache/
+/.phpunit.result.cache
+/.php_cs.cache
+Homestead.yaml
+Homestead.json
+/.env.testing
+/.phpunit/
+/.buildpath
+/.DS_Store
+
+# Composer
+composer.lock
+
+# Node
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+/dist/
+/.vite/
+
+# SQLite
+/database/*.sqlite
+
+# OS
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Optional: Git LFS placeholder
+# *.psd

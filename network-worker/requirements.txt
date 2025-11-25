@@ -1,0 +1,23 @@
+# Network Automation
+routeros-api==0.17.0
+netmiko==4.3.0
+paramiko==3.4.0
+pysnmp==4.4.12
+
+# Database
+psycopg2-binary==2.9.9
+SQLAlchemy==2.0.23
+
+# Queue & Cache
+redis==5.0.1
+celery==5.3.4
+
+# HTTP Client
+requests==2.31.0
+aiohttp==3.9.1
+
+# Utilities
+python-dotenv==1.0.0
+pydantic==2.5.2
+pydantic-settings==2.1.0
+loguru==0.7.2
